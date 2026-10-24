@@ -53,9 +53,7 @@ func (e *CounterpartyVerdictEngine) createCounterparty(ctx context.Context, tx p
 		// The verdict was already written by apply(), and writing it spent the
 		// claim — so this corrects the status it just set rather than trying to
 		// resolve the row a second time.
-		return "", e.pending.CorrectResolution(ctx, tx, row.ID,
-			capture.PendingStatusReal, capture.PendingStatusSuppressed,
-			"the address was erased before the verdict landed")
+		return "", e.correctRefusedVerdict(ctx, tx, row.ID, created)
 	}
 	return created.TriageDomain, nil
 }
@@ -86,9 +84,7 @@ func (e *CounterpartyVerdictEngine) createOwnerScopedCounterparty(
 		return "", err
 	}
 	if created.Suppressed {
-		return "", e.pending.CorrectResolution(ctx, tx, row.ID,
-			capture.PendingStatusReal, capture.PendingStatusSuppressed,
-			"the address was erased before the verdict landed")
+		return "", e.correctRefusedVerdict(ctx, tx, row.ID, created)
 	}
 	return created.TriageDomain, nil
 }
@@ -125,9 +121,12 @@ type counterpartyCreation struct {
 // whose company question is still open, which somebody has to queue a
 // triage read for.
 type counterpartyCreated struct {
-	// Suppressed marks an address erased between capture and the answer. Nothing
+	// Suppressed marks an address erased, or a seat's own. Nothing
 	// was created: erasure outranks a verdict.
 	Suppressed bool
+	// SeatAddress narrows Suppressed to a seat's address, which is a fact
+	// about the seats today and not a decision about the sender.
+	SeatAddress bool
 	// TriageDomain names the domain still owed a company verdict, empty
 	// when there is none.
 	TriageDomain string
@@ -157,6 +156,9 @@ func createCounterpartyRecords(ctx context.Context, tx pgx.Tx, store *contacts.S
 		NarrowedBecause:   in.NarrowedBecause,
 		SkipLeadPromotion: in.SkipLeadPromotion,
 	})
+	if errors.Is(err, contacts.ErrCounterpartyIsSeat) {
+		return counterpartyCreated{Suppressed: true, SeatAddress: true}, nil
+	}
 	if errors.Is(err, contacts.ErrCounterpartySuppressed) {
 		return counterpartyCreated{Suppressed: true}, nil
 	}
@@ -283,4 +285,21 @@ func (e *CounterpartyVerdictEngine) contactStaysTheOwners(
 		return "", err
 	}
 	return contacts.NarrowedOutboundNoAnswer, nil
+}
+
+// seatAddressReason explains a `real` row with no contact behind it.
+const seatAddressReason = "the address belongs to a workspace seat, so no contact was made"
+
+// correctRefusedVerdict settles a verdict that created nothing. Erasure is
+// permanent, so it records `suppressed`. A seat's address keeps `real`: the
+// sender is a human, every later capture asks the seat check again, and a
+// `noise` row would hide the colleague's mail.
+func (e *CounterpartyVerdictEngine) correctRefusedVerdict(ctx context.Context, tx pgx.Tx, id ids.UUID, created counterpartyCreated) error {
+	if created.SeatAddress {
+		return e.pending.CorrectResolution(ctx, tx, id,
+			capture.PendingStatusReal, capture.PendingStatusReal, seatAddressReason)
+	}
+	return e.pending.CorrectResolution(ctx, tx, id,
+		capture.PendingStatusReal, capture.PendingStatusSuppressed,
+		"the address was erased before the verdict landed")
 }

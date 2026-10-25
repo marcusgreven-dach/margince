@@ -436,6 +436,7 @@ The eight shapes, what each is for, and how each one silently passes:
 | `dedupespine_test.go` | H2 | Every INSERT site for contacts, companies and leads is derived from the tree and must ask the duplicate-matching engine with full inputs. |
 | `effectredemption_test.go` | H2 | Every approval effect redeems the approval it ran. |
 | `erasuresuppressionreach_test.go` | H2 | Every writer of an address or channel account asks the erasure list. |
+| `erasuretallysavepoint_test.go` | H2 | The erasure counts its work on a tallyTx (privacy/erasuretally.go), and a savepoint opened on it runs on the wrapped transaction, where nothing counts. |
 | `gopinsrenovatereach_test.go` | H3 | Every Go pin this tree holds is one Renovate can move, and it moves them together. |
 | `importheavywork_test.go` | H2 | An import's rows are written only by the worker. |
 | `liveprobelock_test.go` | H2 | A live-probed write of a held row locks its subject. |

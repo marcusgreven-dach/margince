@@ -401,6 +401,8 @@ export const en = {
   "approval.preview.precisionMonth": "Month only",
   "approval.preview.mergeTags":
     "Replace the source tag on the shown records with the surviving tag. Where both tags are present, remove only the duplicate source assignment. Archive the source tag and release its name for reuse; it is not retained as an alias.",
+  "approval.preview.partnerTierUnset":
+    "Margin tier: not set. A human sets it on the company’s Partner tab.",
   "approval.preview.mergeTagSource": "Tag to remove",
   "approval.preview.mergeTagTarget": "Tag to keep",
   "approval.preview.mergeTagMove": "Record that gains the surviving tag",
@@ -3514,6 +3516,7 @@ export const en = {
   "approval.kind.merge_records": "Merge records",
   "approval.kind.merge_tags": "Merge tags",
   "approval.kind.archive_tag": "Retire a tag",
+  "approval.kind.set_up_partner": "Set up a partner program",
   "approval.kind.change_record_parts": "Change a record’s parts",
   "approval.kind.update_record": "Update record",
   "approval.kind.create_record": "Create record",

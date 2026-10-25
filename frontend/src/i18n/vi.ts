@@ -3680,7 +3680,7 @@ export const vi: Readonly<Record<MessageKey, string>> = {
   "compose.reason.posture": "Giữ lại theo thiết lập của bạn",
   "compose.reason.workspaceFloor": "Giữ lại theo thiết lập công ty",
   "compose.reason.noRecord": "Giữ lại: chưa có hồ sơ",
-  "compose.reason.pendingVerdict": "Giữ lại đến khi phân loại",
+  "compose.reason.pendingVerdict": "Giữ lại cho đến khi kiểm tra",
   "compose.reason.manual": "Giữ riêng tư",
   "compose.reason.verdict": "Giữ lại theo phân loại",
   "compose.reason.counterparty": "Giữ lại: thư với bên ngoài",
@@ -6362,7 +6362,8 @@ export const vi: Readonly<Record<MessageKey, string>> = {
   "analytics.overdueCommitments": "Cam kết quá hạn",
   "analytics.quietSince": "Im lặng từ",
   "analytics.nothingQuiet": "Không có dự án đang triển khai nào im lặng.",
-  "analytics.noProjectsYet": "Chưa có dự án nào. Deal đã chốt sẽ tạo dự án.",
+  "analytics.noProjectsYet":
+    "Chưa có dự án nào. Tạo dự án trong Dự án bằng “Dự án mới”. Khi deal được chốt, dự án của deal chuyển sang “Đang triển khai”.",
   "analytics.coverageSub": "Tình trạng kết nối theo lần kiểm tra gần nhất.",
   "analytics.covSource": "Nguồn",
   "analytics.covState": "Trạng thái",
@@ -9187,7 +9188,7 @@ export const vi: Readonly<Record<MessageKey, string>> = {
   // whether a domain can name a company is a fact about the domain.
   "consumerMail.title": "Tên miền thư cá nhân",
   "consumerMail.sub":
-    "Thư từ các tên miền này tạo liên hệ nhưng không bao giờ tạo công ty. Margince có sẵn danh sách; thêm tên miền còn thiếu hoặc ghi đè mục sai.",
+    "Tên miền của hộp thư cá nhân. Thư từ các tên miền này không bao giờ tạo công ty. Một địa chỉ từ các tên miền này trở thành liên hệ ngay chỉ khi ai đó trong công ty bạn đã trao đổi thư qua lại hoặc có cuộc họp với địa chỉ đó, hoặc một quyết định trước đó đã chấp nhận địa chỉ đó. Nếu không, địa chỉ đó chỉ trở thành liên hệ khi Margince đã phân loại nó. Margince có sẵn danh sách; thêm tên miền còn thiếu hoặc ghi đè mục sai.",
   "consumerMail.addedTitle": "Đã thêm tại đây",
   "consumerMail.addTitle": "Thêm tên miền",
   "consumerMail.domainLabel": "Tên miền",

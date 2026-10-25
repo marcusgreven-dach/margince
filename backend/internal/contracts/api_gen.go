@@ -24963,13 +24963,16 @@ type Activity struct {
 	// Withheld with the rest of the content: it is derived from the body, so a caller who may discover the row without reading it is not told this either.
 	Language *ActivityLanguage `json:"language,omitempty"`
 
-	// Links One activity may link to >1 entity (contact + deal).
+	// Links Every record this activity is filed under that the caller may read; a link to a record they cannot read is left out. One activity may link to several, a contact and a deal say. Every read that returns an activity answers the same links: the list, one activity, and a contact's 360.
 	Links *[]ActivityLink `json:"links,omitempty"`
 
 	// MeetingStatus Set only when kind=meeting.
-	MeetingStatus *ActivityMeetingStatus  `json:"meeting_status,omitempty"`
-	OccurredAt    time.Time               `json:"occurred_at"`
-	Raw           *map[string]interface{} `json:"raw,omitempty"`
+	MeetingStatus *ActivityMeetingStatus `json:"meeting_status,omitempty"`
+	OccurredAt    time.Time              `json:"occurred_at"`
+
+	// OffersEmail Whether Write email on this row opens with a recipient filled in: true exactly when `GET /activities/{id}/reply-recipient` answers a non-empty `address` for a call, meeting, note or task. Both are computed by one rule, described on `ReplyRecipient`. Always false for an email or a message, which are answered with Reply instead, for an archived row, for a task the product filed itself (`automatic_kind` product), and for a row whose content is withheld from the caller. A client offers Write email only when this is true, and reads the address from reply-recipient.
+	OffersEmail bool                    `json:"offers_email"`
+	Raw         *map[string]interface{} `json:"raw,omitempty"`
 
 	// RemindAt Task only. When the reminder comes due. From that instant, for up to 30 days, the task leads its assignee's own Worklist with the reason `reminder_due`, and `GET /v1/activities?reminder_due=true` lists it for them. Nobody else is reminded, and a task with no assignee reminds nobody. Moving `due_at` on a task whose reminder has passed clears this field, unless the same patch names it.
 	RemindAt *time.Time `json:"remind_at,omitempty"`
@@ -47953,11 +47956,25 @@ type ReplaceChannelTokenRequest struct {
 // ReplyRecipient Who a reply to a message is addressed to: one contact, resolved from the
 // message's participants by role.
 //
+// A call, meeting, note or task is written about a contact, not replied to. Its
+// `address` comes from its links alone, never its participants: the reachable
+// address of its one live linked contact the caller may read. Links to companies,
+// deals and other records do not count. Two or more such contacts, none, a contact
+// without an address, a shared mailbox, a seat's login or a colleague's address
+// answer empty, and so does a task the product filed itself. None of these kinds has
+// a conversation to join: each answers `viewer_on_conversation` true, `mailbox_user_ids`
+// empty and `deal_owner_user_id` null. `POST /activities/{id}/draft-email` fills its
+// `to` by the same rule.
+//
 // One contact rather than a list. A reply is written to somebody, and a group
 // thread degrades to the most likely counterparty rather than to nobody.
 type ReplyRecipient struct {
-	// Address Where the reply is sent: the counterparty's own corresponding address where the thread carries one, else their primary live address. Never one of this installation's own contacts. Empty when the thread offers none — including a thread whose every participant is a colleague — which the reader fills in themselves.
+	// Address Where the reply is sent: the counterparty's own corresponding address where the thread carries one, else their primary live address. A written-about row follows its own rule, above. Never one of this installation's own contacts. Empty when the thread offers none — including a thread whose every participant is a colleague — which the reader fills in themselves.
 	Address string `json:"address"`
+
+	// DealOwnerUserId The owner of the deal this message is filed under, for the client to name through its roster. Null when the message is filed under no deal the caller may read, or that deal has no owner. A deal the caller cannot read answers null, the same as no deal.
+	// With several readable deals, an open deal comes before a won or lost one, and then the deal the message was filed under most recently. That is the deal the conversation is about now.
+	DealOwnerUserId *openapi_types.UUID `json:"deal_owner_user_id"`
 
 	// FirstName What a greeting uses. Split server-side rather than in a prompt: a model asked to shorten a name shortens "Dr. Anne-Marie Weiß-Konrad" differently every call.
 	FirstName string `json:"first_name"`
@@ -47969,6 +47986,10 @@ type ReplyRecipient struct {
 	// A label of where the message arrived, never a grant. It is answered only to a caller who may already read the message's content, and a seat named here is named because their credential delivered the row.
 	// Empty is an answer: a hand-logged activity was typed rather than delivered, and a row whose recorded provenance names no seat this company still holds resolves to nobody. Always an array, never null.
 	MailboxUserIds []openapi_types.UUID `json:"mailbox_user_ids"`
+
+	// ViewerOnConversation Whether the caller already belongs to this conversation, so a composer can say when a reply comes from somebody the contact has not been writing with. A label, never a grant: it never refuses a send.
+	// True when either holds. The caller is on the thread: one of their own addresses, or their seat, is the From, To or Cc of the message or of another message in its thread that they may read. Their addresses are their login, the addresses they declared and their connected mailboxes; an address another seat holds on equal or stronger evidence is not theirs. Or the caller is on the team of a deal the message is filed under: its owner, assigned to it, or a member of a team assigned to it. A deal counts only when the caller may read it, so the answer never shows that a hidden deal exists.
+	ViewerOnConversation bool `json:"viewer_on_conversation"`
 }
 
 // ReportBlock One element of a report. What fields are legal is decided by `kind`.
@@ -49578,6 +49599,8 @@ type SendAuthorizationPreviewRecipient struct {
 	// opt-in are all the engine's own reading (`machine`) AND absolute. A surface that
 	// offered an override on those would render a button that cannot achieve what it
 	// promises, and the rep would type a justification the staging gate then ignores.
+	// A recorded reason lifts one category, so a refusal that resolved to no single
+	// category, such as `unknown_purpose`, answers false.
 	CanBeOverruled *bool `json:"can_be_overruled,omitempty"`
 
 	// DecidedBy Whose decision this answer is, which is what says whether anybody may overrule
@@ -64530,6 +64553,14 @@ func (a *Activity) UnmarshalJSON(b []byte) error {
 		delete(object, "occurred_at")
 	}
 
+	if raw, found := object["offers_email"]; found {
+		err = json.Unmarshal(raw, &a.OffersEmail)
+		if err != nil {
+			return fmt.Errorf("error reading 'offers_email': %w", err)
+		}
+		delete(object, "offers_email")
+	}
+
 	if raw, found := object["raw"]; found {
 		err = json.Unmarshal(raw, &a.Raw)
 		if err != nil {
@@ -64834,6 +64865,11 @@ func (a Activity) MarshalJSON() ([]byte, error) {
 	object["occurred_at"], err = json.Marshal(a.OccurredAt)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling 'occurred_at': %w", err)
+	}
+
+	object["offers_email"], err = json.Marshal(a.OffersEmail)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'offers_email': %w", err)
 	}
 
 	if a.Raw != nil {

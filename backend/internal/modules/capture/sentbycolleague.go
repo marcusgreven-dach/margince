@@ -46,10 +46,6 @@ func (s *Sink) asSentByColleagueTx(
 	if err != nil || colleague.IsZero() {
 		return rec, fields, err
 	}
-	self, err := ownerIdentitiesTx(ctx, tx)
-	if err != nil {
-		return rec, fields, err
-	}
 	from := foldAddress(cp.Email)
 	recipients := rec
 	recipients.Addresses = make([]string, 0, len(rec.Participants)+len(rec.WithheldParties))
@@ -58,7 +54,11 @@ func (s *Sink) asSentByColleagueTx(
 			recipients.Addresses = append(recipients.Addresses, p.Email)
 		}
 	}
-	stand, err := s.standInSubject(ctx, tx, recipients, self, connector.DirectionOutbound)
+	us, err := workspacePartiesTx(ctx, tx, recipients.Addresses...)
+	if err != nil {
+		return rec, fields, err
+	}
+	stand, err := s.standInSubject(ctx, tx, recipients, us, connector.DirectionOutbound)
 	if err != nil || stand.Email == "" {
 		return rec, fields, err
 	}

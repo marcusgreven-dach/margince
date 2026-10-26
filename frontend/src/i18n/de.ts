@@ -10783,6 +10783,11 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "auto.enabledFor": "{name} ist aktiv",
   "auto.colLastRun": "Letzter Lauf",
   "auto.colRuns30": "Läufe (30 Tage)",
+  "auto.colOwner": "Läuft als",
+  "auto.ownerFor": "Läuft als {name}",
+  "auto.ownerNone": "Niemand zugeordnet",
+  "auto.ownerHint":
+    "Eine Regel ist blockiert, solange das Mitglied, als das sie läuft, keinen Zugriff hat. Wähle ein anderes Mitglied, damit sie wieder läuft.",
   "auto.colStatus": "Status",
   "auto.colActions": "Aktionen",
   "auto.lastRunNever": "Nie",

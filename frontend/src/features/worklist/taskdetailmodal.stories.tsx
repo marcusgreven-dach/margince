@@ -41,6 +41,7 @@ function ReminderFromRow() {
         category: "tasks",
         level: 2,
         consequence: "task_slips",
+        occurred_precision: "instant",
         because: [{ kind: "due_today" }, { kind: "unassigned" }],
         actions: ["complete", "snooze"],
       }}

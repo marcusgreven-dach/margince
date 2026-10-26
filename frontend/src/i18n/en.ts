@@ -2029,6 +2029,7 @@ export const en = {
   "history.field.name": "Name",
   "history.field.note": "Note",
   "history.field.occurred_at": "Occurred",
+  "history.field.occurred_precision": "Time precision",
   "history.field.company_id": "Company",
   "history.field.owner_id": "Owner",
   "history.field.provider_claims_received": "Provider claims received",
@@ -2085,6 +2086,8 @@ export const en = {
   // What an empty stored jsonb array means to a reader of a change row —
   // never a blank, which reads as a value the row failed to show.
   "history.emptyList": "None set",
+  "history.value.occurred_precision.instant": "Date and time",
+  "history.value.occurred_precision.day": "Date only",
 
   "confidence.high": "high",
   "confidence.med": "medium",
@@ -2274,6 +2277,8 @@ export const en = {
   "deal.card.addTask": "Add task: {name}",
   "deal.mail.sent": "Sent {ago}",
   "deal.mail.received": "Received {ago}",
+  "deal.mail.sentOn": "Sent on {date}",
+  "deal.mail.receivedOn": "Received on {date}",
   "deal.mail.none": "No email on this deal yet",
   "deal.mail.viewAll": "View all activity",
   "deal.closesProvisional": "provisional close date, not confirmed by a human",
@@ -3911,6 +3916,8 @@ export const en = {
   "activity.files.title": "Files on {subject}",
   "activity.followUpOpen": "Open",
   "activity.detail.withheldReason": "Activity content is withheld",
+  "activity.dayHoldsHostSlot":
+    "This meeting is booked in a calendar, so it needs a time as well as a date.",
   "activity.detail.when": "When",
   "activity.detail.attendees": "Attendees",
   "activity.detail.colleagues": "Colleagues",
@@ -16228,7 +16235,7 @@ export const en = {
     "Discussion and next steps. Calendar notes can be edited here.",
   "worklist.verb.meetingHeld": "Held",
   "worklist.verb.meetingNoShow": "No-show",
-  "worklist.verb.meetingCanceled": "Canceled",
+  "worklist.verb.meetingCanceled": "Mark as canceled",
   "worklist.verb.meetingOutcomeRecorded": "Meeting outcome recorded",
   "worklist.verb.meetingOutcomeFailed": "Outcome was not recorded. Retry.",
   "worklist.verb.meetingDayMissing":

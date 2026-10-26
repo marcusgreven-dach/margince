@@ -15,15 +15,17 @@ import {
   Modal,
   PendingBody,
 } from "../design-system/atoms";
-import { DateInput, isISODate } from "../design-system/dateinput";
+import { DateInput } from "../design-system/dateinput";
 import { focusableWithin } from "../design-system/dialogfocus";
 import { DrawerBody, DrawerHead } from "../design-system/drawerbands";
 import { Heading } from "../design-system/heading";
 import { Markdown } from "../design-system/markdown";
 import { provenanceOf } from "../design-system/provenanceof";
 import { SourceEvidence } from "../design-system/sourceevidence";
+import { formatActivityWhen } from "../format/activitywhen";
 import { calendarDay, dueInstant } from "../format/calendarday";
-import { formatDate, formatDateTime } from "../format/format";
+import { isoOrBlank } from "../format/datepattern";
+import { formatDate } from "../format/format";
 import { useLocale, useT } from "../i18n";
 import { useCanWriteRecord } from "../lib/capability";
 import { problemCodeOf, unwrap } from "../lib/problem";
@@ -261,12 +263,9 @@ function TaskDueDatePick({
   // Seeded from the task's own day in the INSTALLATION's zone, matching what
   // the meta line above reads it in: a picker opening on a different day than
   // the one displayed beside it would be two answers to "when is this due".
-  const seeded = dueAt ? calendarDay(new Date(dueAt), recordZone) : "";
-  // Narrowed rather than asserted. calendarDay returns a string, and the
-  // control's type says it takes a calendar day or nothing — so a value that
-  // is neither opens the picker empty instead of feeding the element something
-  // it would silently reject.
-  const current = isISODate(seeded) ? seeded : "";
+  const current = isoOrBlank(
+    dueAt ? calendarDay(new Date(dueAt), recordZone) : "",
+  );
   return (
     <Field label={t("tasks.moveTo")}>
       {(field) => (
@@ -276,12 +275,8 @@ function TaskDueDatePick({
           disabled={pending}
           onChange={(event) => {
             const day = event.target.value;
-            // Narrowed with the control's own guard, not merely tested for
-            // empty. HTML permits a year of four or more digits, so
-            // `10000-09-15` reaches here and `dueInstant` throws on it.
-            // isISODate requires four, and also refuses the cleared
-            // box: the browser's empty state, not a request to undate the task.
-            if (!isISODate(day)) {
+            // A cleared box is not a request to undate the task.
+            if (day === "") {
               return;
             }
             update.mutate({
@@ -392,7 +387,12 @@ export function TaskDetailDialog({
                 )}
                 <span>
                   {t("tasks.logged")}{" "}
-                  {formatDateTime(task.occurred_at, locale, recordZone)}
+                  {formatActivityWhen(
+                    task.occurred_at,
+                    task.occurred_precision,
+                    locale,
+                    recordZone,
+                  )}
                 </span>
                 {task.is_done && (
                   <Badge tone="success">{t("tasks.isDone")}</Badge>

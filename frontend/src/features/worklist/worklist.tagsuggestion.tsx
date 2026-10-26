@@ -14,9 +14,9 @@ import { Row, Stack } from "../../design-system/stack";
 import { TagPill } from "../../design-system/tagpill";
 import { useToast } from "../../design-system/toast";
 import { ProvenanceTag, StagingCard } from "../../design-system/trust";
-import { formatDate } from "../../format/format";
-import { viewerZone } from "../../format/timezone";
+import { activityDay } from "../../format/activitywhen";
 import { useLocale, useT } from "../../i18n";
+import { useRecordZone } from "../../lib/recordzone";
 import {
   type TagSuggestion,
   useContactEmployer,
@@ -58,7 +58,9 @@ function TagSuggestionCard({
   const { locale } = useLocale();
   const toast = useToast();
   const decide = useDecideTagSuggestion();
-  const zone = viewerZone();
+  // A cited activity's date is the record's, and a `day` one has no instant
+  // to move into the reader's zone.
+  const zone = useRecordZone();
   return (
     <StagingCard>
       <Stack gap="2">
@@ -78,7 +80,12 @@ function TagSuggestionCard({
               {t("tagSuggestion.evidence", {
                 kind: t(evidenceKindKey(evidence.kind)),
                 subject: evidence.subject ?? t("tagSuggestion.noSubject"),
-                when: formatDate(evidence.occurred_at, locale, zone),
+                when: activityDay(
+                  evidence.occurred_at,
+                  evidence.occurred_precision,
+                  locale,
+                  zone,
+                ),
               })}
             </li>
           ))}

@@ -334,6 +334,7 @@ The eight shapes, what each is for, and how each one silently passes:
 | `maskfacetcoverage_test.go` | H2 | Every object the maskable-field catalog offers is one some record's history withholds too. |
 | `mcpfaultcoverage_test.go` | H2 | A module's typed refusal must be legible on every surface that can reach it, including the ones it was not written for. |
 | `meetinghistorywriters_test.go` | H2 | Every statement that writes activity.meeting\_status also records the transition. |
+| `meetingoverspelling_test.go` | H2 | When a meeting ENDS is spelled once, in occurredday.EndSQL. |
 | `meetingresponsibility_test.go` | H3 | Every reader of "whose meeting is this" asks storekit.MeetingResponsibilitySQL or UnclaimedMeetingSQL. |
 | `messagevoice_test.go` | H1 | Who wrote a message has one answer: Activity.voice. |
 | `messagingruleapplied_test.go` | H2 | Every obligation a messaging pack declares is one the engine applies, or one this file records as not yet applied and says why. |
@@ -346,6 +347,8 @@ The eight shapes, what each is for, and how each one silently passes:
 | `noticedutycensus_test.go` | H3 | Every way a contact can arrive has a decided disclosure duty. |
 | `nullablebodyfields_test.go` | H2 | The handler of a PATCH or PUT with a nullable body field processes explicit nulls, by clearing or refusing the field. |
 | `nullsentinelindex_test.go` | H2 | A nullable column in a unique key is held by NULLS NOT DISTINCT rather than by a sentinel. |
+| `occurredatcompare_test.go` | H2 | Whether an activity has happened by a moment, or falls in a period, is asked of occurredday. |
+| `occurredprecisioncontract_test.go` | H2 | Every activity time on the wire says how precisely it is known. |
 | `onecallerpredicatebudget_test.go` | H2 | The ceiling on a statement whose predicate the caller wrote is one number, declared in platform/database as CallerPredicateBudget. |
 | `oneconsentcarry_test.go` | H2 | The consent carry (what happens to a retiring record's consent when another record survives it) is spelled once inside the contacts module. |
 | `onecursorenvelope_test.go` | H2 | A keyset cursor travels in one envelope, storekit's. |
@@ -608,7 +611,6 @@ The eight shapes, what each is for, and how each one silently passes:
 | `langcopyonecensus_test.go` | H2 | One census reads every langcopy.Phrase table, and no owner walks its own. |
 | `livemember_test.go` | H1 | "Someone who still works here" is `status = 'active' AND archived\_at IS NULL` on app\_user, and two functions in two packages each called themselves the one spelling of it while the tree held about twenty copies. |
 | `marketingquestion_test.go` | H2 | The question a grant is bound to is the question the screen asks. |
-| `meetingoverspelling_test.go` | H2 | "This meeting is over" is spelled twice, and the two must say the same thing. |
 | `mergelockordering_test.go` | H2 | A capture that may merge threads takes the merge lock before it touches an activity. |
 | `noisejudgedspelling_test.go` | H2 | "An already-settled answer disowns this contact" is spelled once. |
 | `onedraftwriter_test.go` | H1 | One writer produces every grounded draft, or the surfaces drift. |

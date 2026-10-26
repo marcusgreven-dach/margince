@@ -1630,8 +1630,10 @@ export const en = {
   "brief.week.workRecorded": "Work completed this week.",
   "brief.week.leads_one": "{count} lead assigned.",
   "brief.week.leads_other": "{count} leads assigned.",
-  "brief.week.responses_one": "{count} lead answered within target.",
-  "brief.week.responses_other": "{count} leads answered within target.",
+  "brief.week.responses_one":
+    "{count} lead got a first response by week close.",
+  "brief.week.responses_other":
+    "{count} leads got a first response by week close.",
   "brief.week.lost_one": "{count} deal lost.",
   "brief.week.lost_other": "{count} deals lost.",
   "brief.row.details": "Details",
@@ -5285,8 +5287,13 @@ export const en = {
   "brief.weekly.scorecard.advancedBasis":
     "Each move counts: a lead that moves two stages counts twice",
   "brief.weekly.scorecard.answeredInTarget": "Replies past target time",
-  "brief.weekly.scorecard.answeredDetail": "{count} answered in target",
-  "brief.weekly.scorecard.allInTarget": "All answered in target",
+  "brief.weekly.scorecard.noArrivals": "No lead arrived this week",
+  "brief.weekly.scorecard.unanswered":
+    "No first response recorded by week close: {count} of {total}",
+  "brief.weekly.scorecard.allResponded":
+    "First response recorded by week close: all {total}",
+  "brief.weekly.scorecard.respondedNoCohort":
+    "First response recorded by week close: {count}. Arrivals were not recorded for this week",
   "brief.weekly.scorecard.meetingsHeld": "Meetings marked held",
   "brief.weekly.scorecard.meetingsBasis": "{booked} booked · {noShow} no-show",
   "brief.weekly.scorecard.partialHistory": "Meetings without history",

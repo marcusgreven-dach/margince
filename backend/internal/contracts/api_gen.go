@@ -48509,7 +48509,9 @@ type RelinkDestinationType string
 // `entity_type`/`entity_id`/`replace_existing_of_type` mean exactly what they mean on
 // `relinkActivity`.
 type RelinkThreadRequest struct {
-	EntityId openapi_types.UUID `json:"entity_id"`
+	// ActivityId A message of the conversation to move; it always moves with it.
+	ActivityId *openapi_types.UUID `json:"activity_id,omitempty"`
+	EntityId   openapi_types.UUID  `json:"entity_id"`
 
 	// EntityType The record kinds an activity may be filed under.
 	EntityType RelinkDestinationType `json:"entity_type"`
@@ -48517,8 +48519,9 @@ type RelinkThreadRequest struct {
 	// ReplaceExistingOfType When true, replaces each activity's existing link of the same entity_type (move) rather than adding (associate).
 	ReplaceExistingOfType *bool `json:"replace_existing_of_type,omitempty"`
 
-	// ThreadKey The conversation key the activities carry (`Activity.thread_key`, also the `thread_key` list filter).
-	ThreadKey string `json:"thread_key"`
+	// ThreadKey Ignored. The conversation is the one `activity_id` belongs to, because a thread key alone does not say whose conversation it is.
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	ThreadKey *string `json:"thread_key,omitempty"`
 }
 
 // RemovalUndo The way back from taking a tag off a record or a record off a Shortlist. A removal answers it, and the matching restore route takes it back unchanged.

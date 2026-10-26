@@ -3216,6 +3216,17 @@ paths:
             A screen that names many companies it did not list itself, such as the deals board,
             reads them in one request instead of one each. An id the caller cannot see, or that
             is archived without `include_archived`, is simply absent from the page.
+        - name: source_system
+          in: query
+          schema: { type: string, maxLength: 128 }
+          description: |
+            Companies that came from this outside system, matched exactly. Send `source_id`
+            too to find the one company holding that id there. A company the caller cannot
+            see, or that is archived without `include_archived`, is simply absent from the page.
+        - name: source_id
+          in: query
+          schema: { type: string, maxLength: 128 }
+          description: An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different companies in different systems.
       responses:
         '200':
           description: A page of companies.
@@ -3455,6 +3466,32 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /companies/{id}/offered-values:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Companies]
+      operationId: listCompanyOfferedValues
+      security: [ { cookieAuth: [] } ]   # shown beside the typed value on the record page, not an agent surface
+      x-agent-access: human-only
+      summary: What each source last offered for the company's fields, to show beside the value on the record.
+      description: |
+        One entry per source and field, for the fields a source offered through its feed. The
+        offered value is kept whether the record took it or kept a user's edit, so the two
+        can be compared. Needs read on companies and row visibility of the company. An archived
+        company answers 404.
+      responses:
+        '200':
+          description: The offered values, ordered by source and field; empty when no source offered any.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CompanyOfferedValue' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /companies/{id}/logo:
     parameters:
@@ -5805,6 +5842,17 @@ paths:
             of them, `all` a record carrying every one, `none` a record carrying not one.
 
             Ignored when no `tag_id` is given — a mode with nothing to combine is not a filter.
+        - name: source_system
+          in: query
+          schema: { type: string, maxLength: 128 }
+          description: |
+            Deals that came from this outside system, matched exactly. Send `source_id` too to
+            find the one deal holding that id there. A deal that is archived without
+            `include_archived` is simply absent from the page.
+        - name: source_id
+          in: query
+          schema: { type: string, maxLength: 128 }
+          description: An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different deals in different systems.
       responses:
         '200':
           description: A page of deals.
@@ -23500,6 +23548,78 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
+  /users/service-members:
+    post:
+      tags: [Identity]
+      operationId: declareServiceMember
+      security: [ { cookieAuth: [] } ]   # human session only — rejects agent bearer/Passport (x-agent-access: human-only)
+      summary: Declare the member that owns an extension's unattended feed. Installation admin only, human only.
+      description: |
+        Creates a member for a scheduled feed to run as, so the feed does not depend on a
+        colleague who may one day leave. The extension lands records as this member, and the
+        feed's secret is filed under it.
+
+        It has no login: there is no password and nobody can sign in as it. It has a full seat
+        type but is free of the licence seat limit: it is not counted, and declaring one never
+        fails on the seat limit. It holds one role, `service_ingest`,
+        which can create and update activities, contacts and companies and nothing else.
+
+        The member serves the one extension named in `extension`. Any other extension asking
+        to act as it is refused, so a member declared for one feed cannot be borrowed by
+        another.
+
+        It is archived, never deleted: see `POST /users/service-members/{id}/archive`.
+
+        Installation admin only (`role: admin`); an agent may never declare one.
+      x-agent-access: human-only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceMemberRequest' }
+      responses:
+        '201':
+          description: The service member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: >-
+            Refused: `permission_denied` — the caller is not an installation admin, or is an agent.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: >-
+            Refused: `company_not_described` — this installation has not yet saved its own
+            company through `PUT /company`.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /users/service-members/{id}/archive:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Identity]
+      operationId: archiveServiceMember
+      security: [ { cookieAuth: [] } ]   # human session only — rejects agent bearer/Passport (x-agent-access: human-only)
+      summary: Retire a service member. Installation admin only, human only.
+      description: |
+        Deactivates and archives the member, which stops the feed that runs as it. The row stays, so the audit trail and the secret filed under it keep
+        naming something real; nothing deletes a service member.
+
+        Offboarding a colleague never does this. A feed stops only when somebody archives its
+        member. Publishes `user.deactivated`.
+
+        Answers 404 for an id that is not a live service member, including one already archived.
+      x-agent-access: human-only
+      responses:
+        '204': { description: The member is archived. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /users/names:
     get:
       tags: [Identity]
@@ -24228,6 +24348,65 @@ paths:
               schema: { $ref: '#/components/schemas/ExtensionDirectory' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+
+  /extensions/{name}/settings:
+    get:
+      tags: [Extensions]
+      operationId: getExtensionSettings
+      security: [ { cookieAuth: [] } ]   # human session only — an operator console, not an agent surface
+      x-agent-access: human-only
+      summary: Read what the core does with a unit's feed. Needs the extension_access read grant.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+          description: The unit name, as listed by `GET /extensions`.
+      responses:
+        '200':
+          description: The unit's settings; a unit nobody has configured reads the defaults.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtensionSettings' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Extensions]
+      operationId: updateExtensionSettings
+      security: [ { cookieAuth: [] } ]   # human session only — an operator console, not an agent surface
+      x-agent-access: human-only
+      summary: Set what the core does with a unit's feed. Admin only.
+      description: |
+        Saves the settings of one composed unit. `declared` changes the settings the unit
+        declares as data; a key the unit did not declare, or a value its kind cannot hold, is
+        a 422. `overwrites_edited_fields` says
+        whether the unit's feed may overwrite a field of a company or deal that a user last
+        edited. It is off until an admin turns it on, so the feed leaves such a field as it is
+        and names it in `Result.Withheld`. The change is audited like any installation setting.
+
+        Admin only, human session only. An unknown unit name answers 404.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+          description: The unit name, as listed by `GET /extensions`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExtensionSettings' }
+      responses:
+        '200':
+          description: The saved settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtensionSettings' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /teams:
     get:
@@ -38743,7 +38922,8 @@ components:
           type: array
           items: { $ref: '#/components/schemas/ContactPhoneInput' }
         source: { type: string }
-        source_system: { type: [string, 'null'], description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_id: { type: [string, 'null'], maxLength: 128, description: 'The id this contact has in source_system. Needs source_system, and the pair is unique: a second contact with the same pair is 409.' }
+        source_system: { type: [string, 'null'], maxLength: 128, description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
         source_author_id: { type: [string, 'null'], format: uuid, description: 'Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat''s current name wins on read. captured_by still names the caller.' }
         source_author_name: { type: [string, 'null'], maxLength: 200, description: 'The source system''s own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.' }
       additionalProperties: true
@@ -39301,7 +39481,8 @@ components:
           type: array
           items: { $ref: '#/components/schemas/CompanyDomainInput' }
         source: { type: string }
-        source_system: { type: [string, 'null'], description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_system: { type: [string, 'null'], maxLength: 128, description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_id: { type: [string, 'null'], maxLength: 128, description: 'The id this company has in source_system. Needs source_system, and the pair is unique: a second company with the same pair is 409. Look a company up by it with the `source_system` and `source_id` filters on `listCompanies`.' }
         source_author_id: { type: [string, 'null'], format: uuid, description: 'Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat''s current name wins on read. captured_by still names the caller.' }
         source_author_name: { type: [string, 'null'], maxLength: 200, description: 'The source system''s own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.' }
       additionalProperties: true
@@ -39377,6 +39558,16 @@ components:
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Company' } }
         page: { $ref: '#/components/schemas/PageInfo' }
+
+    CompanyOfferedValue:
+      type: object
+      description: The value one source last offered for one company field.
+      required: [source_system, field, value, offered_at]
+      properties:
+        source_system: { type: string, description: "The source that offered it, as named in the company's outside id." }
+        field: { type: string, enum: [legal_name, industry, description] }
+        value: { type: string }
+        offered_at: { type: string, format: date-time }
 
     CompanyHierarchyRollup:
       type: object
@@ -45431,7 +45622,8 @@ components:
         owner_id: { type: [string, 'null'], format: uuid }
         expected_close_date: { type: [string, 'null'], format: date, description: 'Deals are born open, so a date before today is rejected 422 (INV-CLOSE-PAST, formulas §11).' }
         source: { type: string }
-        source_system: { type: [string, 'null'], description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_system: { type: [string, 'null'], maxLength: 128, description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_id: { type: [string, 'null'], maxLength: 128, description: 'The id this deal has in source_system. Needs source_system, and the pair is unique: a second deal with the same pair is 409. Look a deal up by it with the `source_system` and `source_id` filters on `listDeals`.' }
         source_author_id: { type: [string, 'null'], format: uuid, description: 'Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat''s current name wins on read. captured_by still names the caller.' }
         source_author_name: { type: [string, 'null'], maxLength: 200, description: 'The source system''s own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.' }
       additionalProperties: true
@@ -46273,7 +46465,8 @@ components:
         started_at: { type: [string, 'null'], format: date }
         target_end_date: { type: [string, 'null'], format: date }
         source: { type: string }
-        source_system: { type: [string, 'null'], description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
+        source_id: { type: [string, 'null'], maxLength: 128, description: 'The id this project has in source_system. Needs source_system, and the pair is unique: a second project with the same pair is 409.' }
+        source_system: { type: [string, 'null'], maxLength: 128, description: 'Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).' }
         source_author_id: { type: [string, 'null'], format: uuid, description: 'Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat''s current name wins on read. captured_by still names the caller.' }
         source_author_name: { type: [string, 'null'], maxLength: 200, description: 'The source system''s own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.' }
       additionalProperties: true
@@ -53003,6 +53196,13 @@ components:
             An invited member counts against the licensed seat count, so an invitation that
             was sent to the wrong address is released by deactivating it.
         is_agent: { type: boolean, default: false, description: First-party Agent Runner identity vs a human seat. }
+        service_extension:
+          type: [string, 'null']
+          description: >
+            The extension unit this seat is the service member of: the identity that unit's scheduled
+            feed runs as. Null for every other seat, including an AI agent seat, so a client tells the
+            two apart by this field and not by `is_agent`. Present only for an admin caller, with
+            `roles`.
         assignable:
           type: boolean
           description: >
@@ -53093,6 +53293,20 @@ components:
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/SeatName' } }
 
+    ServiceMemberRequest:
+      type: object
+      description: >-
+        A member for an extension's unattended feed. No password and no way in.
+      required: [extension, display_name]
+      properties:
+        extension:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: >-
+            The extension unit the member serves, by its manifest name. Only that unit may act as
+            the member. A name no installed unit carries is accepted and simply never used.
+        display_name: { type: string, minLength: 1, maxLength: 255 }
     FormerMemberRequest:
       type: object
       description: >-
@@ -55286,6 +55500,50 @@ components:
             with no handler ticks nothing and is deliberately absent, because an operator
             reading this list is asking what runs, not what was written down. Sorted.
           items: { type: string }
+
+    ExtensionSettings:
+      type: object
+      additionalProperties: false
+      required: [overwrites_edited_fields]
+      description: The governance settings of one composed extension unit.
+      properties:
+        overwrites_edited_fields:
+          type: boolean
+          description: >-
+            True when the unit's feed may overwrite a company or deal field that a user last
+            edited. False, the default, makes the feed leave such a field as it is and name it
+            in `Result.Withheld`.
+        lands_records:
+          type: boolean
+          readOnly: true
+          description: >-
+            True when the unit lands companies or deals. Only such a unit has a field a user can have
+            edited, so the screen offers the overwrite switch for it and for no other unit. Ignored on a write.
+        declared:
+          type: array
+          description: >-
+            The settings the unit declares as data, with their saved values. Only an admin gets
+            them back, so the list is absent for anyone else. On a write, send the `key` and
+            `value` of each setting to change; a setting left out keeps its value.
+          items: { $ref: '#/components/schemas/DeclaredExtensionSetting' }
+
+    DeclaredExtensionSetting:
+      type: object
+      additionalProperties: false
+      required: [key, value]
+      description: One setting a unit declares, drawn by the core.
+      properties:
+        key: { type: string, description: "The setting's name inside the unit." }
+        label: { type: string, readOnly: true, description: "The name shown to the admin, as the unit wrote it." }
+        hint: { type: string, readOnly: true, description: "One line saying what the setting does." }
+        kind:
+          type: string
+          readOnly: true
+          enum: [switch, text]
+          description: The control the core draws.
+        value:
+          type: string
+          description: The saved value. A switch holds `true` or `false`; a text setting holds one short line.
 
     ComposedExtensionRoute:
       type: object

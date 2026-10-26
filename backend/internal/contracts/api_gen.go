@@ -5776,6 +5776,27 @@ func (e CompanyHierarchyRollupScope) Valid() bool {
 	}
 }
 
+// Defines values for CompanyOfferedValueField.
+const (
+	CompanyOfferedValueFieldDescription CompanyOfferedValueField = "description"
+	CompanyOfferedValueFieldIndustry    CompanyOfferedValueField = "industry"
+	CompanyOfferedValueFieldLegalName   CompanyOfferedValueField = "legal_name"
+)
+
+// Valid indicates whether the value is a known member of the CompanyOfferedValueField enum.
+func (e CompanyOfferedValueField) Valid() bool {
+	switch e {
+	case CompanyOfferedValueFieldDescription:
+		return true
+	case CompanyOfferedValueFieldIndustry:
+		return true
+	case CompanyOfferedValueFieldLegalName:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CompanyProfileFieldField.
 const (
 	CompanyProfileFieldFieldBuyingCenter      CompanyProfileFieldField = "buying_center"
@@ -9709,6 +9730,24 @@ func (e DecideCommissionRequestDecision) Valid() bool {
 	case DecideCommissionRequestDecisionPay:
 		return true
 	case DecideCommissionRequestDecisionVoid:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeclaredExtensionSettingKind.
+const (
+	DeclaredExtensionSettingKindSwitch DeclaredExtensionSettingKind = "switch"
+	DeclaredExtensionSettingKindText   DeclaredExtensionSettingKind = "text"
+)
+
+// Valid indicates whether the value is a known member of the DeclaredExtensionSettingKind enum.
+func (e DeclaredExtensionSettingKind) Valid() bool {
+	switch e {
+	case DeclaredExtensionSettingKindSwitch:
+		return true
+	case DeclaredExtensionSettingKindText:
 		return true
 	default:
 		return false
@@ -33740,6 +33779,19 @@ type CompanyListResponse struct {
 	Page PageInfo  `json:"page"`
 }
 
+// CompanyOfferedValue The value one source last offered for one company field.
+type CompanyOfferedValue struct {
+	Field     CompanyOfferedValueField `json:"field"`
+	OfferedAt time.Time                `json:"offered_at"`
+
+	// SourceSystem The source that offered it, as named in the company's outside id.
+	SourceSystem string `json:"source_system"`
+	Value        string `json:"value"`
+}
+
+// CompanyOfferedValueField defines model for CompanyOfferedValue.Field.
+type CompanyOfferedValueField string
+
 // CompanyProfile The installation's own company. The flat properties remain compatibility aliases for the
 // existing form; `fields` and `facts` are the provenance-bearing source records used by new
 // clients and by CompanyContext. New onboarding considers the profile minimum-complete when
@@ -36560,6 +36612,9 @@ type CreateCompanyRequest struct {
 	// SourceAuthorName The source system's own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.
 	SourceAuthorName *string `json:"source_author_name,omitempty"`
 
+	// SourceId The id this company has in source_system. Needs source_system, and the pair is unique: a second company with the same pair is 409. Look a company up by it with the `source_system` and `source_id` filters on `listCompanies`.
+	SourceId *string `json:"source_id,omitempty"`
+
 	// SourceSystem Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).
 	SourceSystem         *string                `json:"source_system,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
@@ -36608,6 +36663,9 @@ type CreateContactRequest struct {
 
 	// SourceAuthorName The source system's own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.
 	SourceAuthorName *string `json:"source_author_name,omitempty"`
+
+	// SourceId The id this contact has in source_system. Needs source_system, and the pair is unique: a second contact with the same pair is 409.
+	SourceId *string `json:"source_id,omitempty"`
 
 	// SourceSystem Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).
 	SourceSystem         *string                `json:"source_system,omitempty"`
@@ -36725,6 +36783,9 @@ type CreateDealRequest struct {
 
 	// SourceAuthorName The source system's own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.
 	SourceAuthorName *string `json:"source_author_name,omitempty"`
+
+	// SourceId The id this deal has in source_system. Needs source_system, and the pair is unique: a second deal with the same pair is 409. Look a deal up by it with the `source_system` and `source_id` filters on `listDeals`.
+	SourceId *string `json:"source_id,omitempty"`
 
 	// SourceSystem Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).
 	SourceSystem         *string                `json:"source_system,omitempty"`
@@ -37175,6 +37236,9 @@ type CreateProjectRequest struct {
 
 	// SourceAuthorName The source system's own spelling of who wrote this record. Same door as source_author_id: a declared importer only, beside a source_system. Kept when a seat is also named, so the name survives the seat.
 	SourceAuthorName *string `json:"source_author_name,omitempty"`
+
+	// SourceId The id this project has in source_system. Needs source_system, and the pair is unique: a second project with the same pair is 409.
+	SourceId *string `json:"source_id,omitempty"`
 
 	// SourceSystem Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused).
 	SourceSystem         *string                `json:"source_system,omitempty"`
@@ -38612,6 +38676,27 @@ type DecideLegalReviewRequest struct {
 	Outcome  LegalReviewOutcome `json:"outcome"`
 }
 
+// DeclaredExtensionSetting One setting a unit declares, drawn by the core.
+type DeclaredExtensionSetting struct {
+	// Hint One line saying what the setting does.
+	Hint *string `json:"hint,omitempty"`
+
+	// Key The setting's name inside the unit.
+	Key string `json:"key"`
+
+	// Kind The control the core draws.
+	Kind *DeclaredExtensionSettingKind `json:"kind,omitempty"`
+
+	// Label The name shown to the admin, as the unit wrote it.
+	Label *string `json:"label,omitempty"`
+
+	// Value The saved value. A switch holds `true` or `false`; a text setting holds one short line.
+	Value string `json:"value"`
+}
+
+// DeclaredExtensionSettingKind The control the core draws.
+type DeclaredExtensionSettingKind string
+
 // DedupeCandidate One DH-DDL-1 review-queue row: the canonical unordered pair, its confidence, and the detection-time evidence snapshot (DH-N-8).
 type DedupeCandidate struct {
 	// CanDecide Whether THIS caller could dispose of the pair — merge it, dismiss it,
@@ -39520,6 +39605,18 @@ type ExtensionIngestRefusal struct {
 // names the mapping to fix: "every record fails its participants" is a different
 // bug from "every record fails its key".
 type ExtensionIngestRefusalRefusal string
+
+// ExtensionSettings The governance settings of one composed extension unit.
+type ExtensionSettings struct {
+	// Declared The settings the unit declares as data, with their saved values. Only an admin gets them back, so the list is absent for anyone else. On a write, send the `key` and `value` of each setting to change; a setting left out keeps its value.
+	Declared *[]DeclaredExtensionSetting `json:"declared,omitempty"`
+
+	// LandsRecords True when the unit lands companies or deals. Only such a unit has a field a user can have edited, so the screen offers the overwrite switch for it and for no other unit. Ignored on a write.
+	LandsRecords *bool `json:"lands_records,omitempty"`
+
+	// OverwritesEditedFields True when the unit's feed may overwrite a company or deal field that a user last edited. False, the default, makes the feed leave such a field as it is and name it in `Result.Withheld`.
+	OverwritesEditedFields bool `json:"overwrites_edited_fields"`
+}
 
 // ExtensionUnitIngestHealth defines model for ExtensionUnitIngestHealth.
 type ExtensionUnitIngestHealth struct {
@@ -50610,6 +50707,14 @@ type SendMessageRequest struct {
 // objected, so naming one here is refused (422 `invalid`).
 type SendMessageRequestCommunicationContext string
 
+// ServiceMemberRequest A member for an extension's unattended feed. No password and no way in.
+type ServiceMemberRequest struct {
+	DisplayName string `json:"display_name"`
+
+	// Extension The extension unit the member serves, by its manifest name. Only that unit may act as the member. A name no installed unit carries is accepted and simply never used.
+	Extension string `json:"extension"`
+}
+
 // ServiceStatus The fixed answer of `GET /status`.
 type ServiceStatus struct {
 	Status ServiceStatusStatus `json:"status"`
@@ -53734,6 +53839,9 @@ type User struct {
 
 	// Roles This member's assigned system role keys. Present ONLY for an admin caller — the roster is readable by every authenticated member (it feeds the share/assignee pickers), and a rep has no business enumerating who holds `admin`. Normally exactly one key: `inviteUser` assigns one and `changeUserRole` replaces the whole set with one. Clients that render a single current role must still handle the empty and multi-key cases. Deliberately absent on `MeResponse.user`, whose sibling `MeResponse.roles` is the one authority for the caller's own roles — the same fact spelled twice could disagree.
 	Roles *[]string `json:"roles,omitempty"`
+
+	// ServiceExtension The extension unit this seat is the service member of: the identity that unit's scheduled feed runs as. Null for every other seat, including an AI agent seat, so a client tells the two apart by this field and not by `is_agent`. Present only for an admin caller, with `roles`.
+	ServiceExtension *string `json:"service_extension,omitempty"`
 
 	// Status `invited` is a seat that exists and has never been entered: the member holds a licensed seat and appears in the roster, but has set no password and can sign in by no method until they redeem their invitation link. Redeeming it makes them `active`, which is the only status that may sign in.
 	// An invited member counts against the licensed seat count, so an invitation that was sent to the wrong address is released by deactivating it.
@@ -58168,6 +58276,14 @@ type ListCompaniesParams struct {
 	// reads them in one request instead of one each. An id the caller cannot see, or that
 	// is archived without `include_archived`, is simply absent from the page.
 	Id *[]openapi_types.UUID `form:"id,omitempty" json:"id,omitempty"`
+
+	// SourceSystem Companies that came from this outside system, matched exactly. Send `source_id`
+	// too to find the one company holding that id there. A company the caller cannot
+	// see, or that is archived without `include_archived`, is simply absent from the page.
+	SourceSystem *string `form:"source_system,omitempty" json:"source_system,omitempty"`
+
+	// SourceId An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different companies in different systems.
+	SourceId *string `form:"source_id,omitempty" json:"source_id,omitempty"`
 }
 
 // ListCompaniesParamsCapturedByKind defines parameters for ListCompanies.
@@ -59935,6 +60051,14 @@ type ListDealsParams struct {
 	//
 	// Ignored when no `tag_id` is given — a mode with nothing to combine is not a filter.
 	TagMode *ListDealsParamsTagMode `form:"tag_mode,omitempty" json:"tag_mode,omitempty"`
+
+	// SourceSystem Deals that came from this outside system, matched exactly. Send `source_id` too to
+	// find the one deal holding that id there. A deal that is archived without
+	// `include_archived` is simply absent from the page.
+	SourceSystem *string `form:"source_system,omitempty" json:"source_system,omitempty"`
+
+	// SourceId An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different deals in different systems.
+	SourceId *string `form:"source_id,omitempty" json:"source_id,omitempty"`
 }
 
 // ListDealsParamsStatus defines parameters for ListDeals.
@@ -64335,6 +64459,9 @@ type ResolveEntitiesJSONRequestBody = EntityResolutionRequest
 // CreateFilteredExportJSONRequestBody defines body for CreateFilteredExport for application/json ContentType.
 type CreateFilteredExportJSONRequestBody = FilteredExportRequest
 
+// UpdateExtensionSettingsJSONRequestBody defines body for UpdateExtensionSettings for application/json ContentType.
+type UpdateExtensionSettingsJSONRequestBody = ExtensionSettings
+
 // PreviewFilterJSONRequestBody defines body for PreviewFilter for application/json ContentType.
 type PreviewFilterJSONRequestBody = FilterPreviewRequest
 
@@ -64781,6 +64908,9 @@ type InviteUserJSONRequestBody = InviteUserRequest
 
 // CreateFormerMemberJSONRequestBody defines body for CreateFormerMember for application/json ContentType.
 type CreateFormerMemberJSONRequestBody = FormerMemberRequest
+
+// DeclareServiceMemberJSONRequestBody defines body for DeclareServiceMember for application/json ContentType.
+type DeclareServiceMemberJSONRequestBody = ServiceMemberRequest
 
 // DeactivateUserJSONRequestBody defines body for DeactivateUser for application/json ContentType.
 type DeactivateUserJSONRequestBody = DeactivateUserRequest
@@ -67990,6 +68120,14 @@ func (a *CreateCompanyRequest) UnmarshalJSON(b []byte) error {
 		delete(object, "source_author_name")
 	}
 
+	if raw, found := object["source_id"]; found {
+		err = json.Unmarshal(raw, &a.SourceId)
+		if err != nil {
+			return fmt.Errorf("error reading 'source_id': %w", err)
+		}
+		delete(object, "source_id")
+	}
+
 	if raw, found := object["source_system"]; found {
 		err = json.Unmarshal(raw, &a.SourceSystem)
 		if err != nil {
@@ -68094,6 +68232,13 @@ func (a CreateCompanyRequest) MarshalJSON() ([]byte, error) {
 		object["source_author_name"], err = json.Marshal(a.SourceAuthorName)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'source_author_name': %w", err)
+		}
+	}
+
+	if a.SourceId != nil {
+		object["source_id"], err = json.Marshal(a.SourceId)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'source_id': %w", err)
 		}
 	}
 
@@ -68226,6 +68371,14 @@ func (a *CreateContactRequest) UnmarshalJSON(b []byte) error {
 		delete(object, "source_author_name")
 	}
 
+	if raw, found := object["source_id"]; found {
+		err = json.Unmarshal(raw, &a.SourceId)
+		if err != nil {
+			return fmt.Errorf("error reading 'source_id': %w", err)
+		}
+		delete(object, "source_id")
+	}
+
 	if raw, found := object["source_system"]; found {
 		err = json.Unmarshal(raw, &a.SourceSystem)
 		if err != nil {
@@ -68331,6 +68484,13 @@ func (a CreateContactRequest) MarshalJSON() ([]byte, error) {
 		object["source_author_name"], err = json.Marshal(a.SourceAuthorName)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'source_author_name': %w", err)
+		}
+	}
+
+	if a.SourceId != nil {
+		object["source_id"], err = json.Marshal(a.SourceId)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'source_id': %w", err)
 		}
 	}
 
@@ -68815,6 +68975,14 @@ func (a *CreateDealRequest) UnmarshalJSON(b []byte) error {
 		delete(object, "source_author_name")
 	}
 
+	if raw, found := object["source_id"]; found {
+		err = json.Unmarshal(raw, &a.SourceId)
+		if err != nil {
+			return fmt.Errorf("error reading 'source_id': %w", err)
+		}
+		delete(object, "source_id")
+	}
+
 	if raw, found := object["source_system"]; found {
 		err = json.Unmarshal(raw, &a.SourceSystem)
 		if err != nil {
@@ -68967,6 +69135,13 @@ func (a CreateDealRequest) MarshalJSON() ([]byte, error) {
 		object["source_author_name"], err = json.Marshal(a.SourceAuthorName)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'source_author_name': %w", err)
+		}
+	}
+
+	if a.SourceId != nil {
+		object["source_id"], err = json.Marshal(a.SourceId)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'source_id': %w", err)
 		}
 	}
 
@@ -69395,6 +69570,14 @@ func (a *CreateProjectRequest) UnmarshalJSON(b []byte) error {
 		delete(object, "source_author_name")
 	}
 
+	if raw, found := object["source_id"]; found {
+		err = json.Unmarshal(raw, &a.SourceId)
+		if err != nil {
+			return fmt.Errorf("error reading 'source_id': %w", err)
+		}
+		delete(object, "source_id")
+	}
+
 	if raw, found := object["source_system"]; found {
 		err = json.Unmarshal(raw, &a.SourceSystem)
 		if err != nil {
@@ -69478,6 +69661,13 @@ func (a CreateProjectRequest) MarshalJSON() ([]byte, error) {
 		object["source_author_name"], err = json.Marshal(a.SourceAuthorName)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling 'source_author_name': %w", err)
+		}
+	}
+
+	if a.SourceId != nil {
+		object["source_id"], err = json.Marshal(a.SourceId)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'source_id': %w", err)
 		}
 	}
 
@@ -76533,6 +76723,9 @@ type ServerInterface interface {
 	// Merge this company into a target (non-lossy).
 	// (POST /companies/{id}/merge)
 	MergeCompany(w http.ResponseWriter, r *http.Request, id Id, params MergeCompanyParams)
+	// What each source last offered for the company's fields, to show beside the value on the record.
+	// (GET /companies/{id}/offered-values)
+	ListCompanyOfferedValues(w http.ResponseWriter, r *http.Request, id Id)
 	// Read the partner extension on a company (404 if the company is not a partner).
 	// (GET /companies/{id}/partner)
 	GetPartner(w http.ResponseWriter, r *http.Request, id Id)
@@ -77121,6 +77314,12 @@ type ServerInterface interface {
 	// List the composed extension units and what each contributes. Human-only, read-only; needs the extension_access read grant.
 	// (GET /extensions)
 	ListExtensions(w http.ResponseWriter, r *http.Request)
+	// Read what the core does with a unit's feed. Needs the extension_access read grant.
+	// (GET /extensions/{name}/settings)
+	GetExtensionSettings(w http.ResponseWriter, r *http.Request, name string)
+	// Set what the core does with a unit's feed. Admin only.
+	// (PUT /extensions/{name}/settings)
+	UpdateExtensionSettings(w http.ResponseWriter, r *http.Request, name string)
 	// Per-field change history for one record, projected from audit_log before/after diffs.
 	// (GET /field-history)
 	GetFieldHistory(w http.ResponseWriter, r *http.Request, params GetFieldHistoryParams)
@@ -78228,6 +78427,12 @@ type ServerInterface interface {
 	// Name the colleagues behind a set of ids. Read-only.
 	// (GET /users/names)
 	NameSeats(w http.ResponseWriter, r *http.Request, params NameSeatsParams)
+	// Declare the member that owns an extension's unattended feed. Installation admin only, human only.
+	// (POST /users/service-members)
+	DeclareServiceMember(w http.ResponseWriter, r *http.Request)
+	// Retire a service member. Installation admin only, human only.
+	// (POST /users/service-members/{id}/archive)
+	ArchiveServiceMember(w http.ResponseWriter, r *http.Request, id Id)
 	// What this member sees and may do today, from their roles and teams.
 	// (GET /users/{id}/access)
 	GetUserAccess(w http.ResponseWriter, r *http.Request, id Id)
@@ -80085,6 +80290,12 @@ func (_ Unimplemented) MergeCompany(w http.ResponseWriter, r *http.Request, id I
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// What each source last offered for the company's fields, to show beside the value on the record.
+// (GET /companies/{id}/offered-values)
+func (_ Unimplemented) ListCompanyOfferedValues(w http.ResponseWriter, r *http.Request, id Id) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Read the partner extension on a company (404 if the company is not a partner).
 // (GET /companies/{id}/partner)
 func (_ Unimplemented) GetPartner(w http.ResponseWriter, r *http.Request, id Id) {
@@ -81258,6 +81469,18 @@ func (_ Unimplemented) ConnectExtOauth(w http.ResponseWriter, r *http.Request, p
 // List the composed extension units and what each contributes. Human-only, read-only; needs the extension_access read grant.
 // (GET /extensions)
 func (_ Unimplemented) ListExtensions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Read what the core does with a unit's feed. Needs the extension_access read grant.
+// (GET /extensions/{name}/settings)
+func (_ Unimplemented) GetExtensionSettings(w http.ResponseWriter, r *http.Request, name string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Set what the core does with a unit's feed. Admin only.
+// (PUT /extensions/{name}/settings)
+func (_ Unimplemented) UpdateExtensionSettings(w http.ResponseWriter, r *http.Request, name string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -83472,6 +83695,18 @@ func (_ Unimplemented) CreateFormerMember(w http.ResponseWriter, r *http.Request
 // Name the colleagues behind a set of ids. Read-only.
 // (GET /users/names)
 func (_ Unimplemented) NameSeats(w http.ResponseWriter, r *http.Request, params NameSeatsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Declare the member that owns an extension's unattended feed. Installation admin only, human only.
+// (POST /users/service-members)
+func (_ Unimplemented) DeclareServiceMember(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Retire a service member. Installation admin only, human only.
+// (POST /users/service-members/{id}/archive)
+func (_ Unimplemented) ArchiveServiceMember(w http.ResponseWriter, r *http.Request, id Id) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -93580,6 +93815,32 @@ func (siw *ServerInterfaceWrapper) ListCompanies(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// ------------- Optional query parameter "source_system" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "source_system", r.URL.Query(), &params.SourceSystem, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "source_system"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_system", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "source_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "source_id", r.URL.Query(), &params.SourceId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "source_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_id", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListCompanies(w, r, params)
 	}))
@@ -95489,6 +95750,38 @@ func (siw *ServerInterfaceWrapper) MergeCompany(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MergeCompany(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListCompanyOfferedValues operation middleware
+func (siw *ServerInterfaceWrapper) ListCompanyOfferedValues(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id Id
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListCompanyOfferedValues(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -102125,6 +102418,32 @@ func (siw *ServerInterfaceWrapper) ListDeals(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// ------------- Optional query parameter "source_system" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "source_system", r.URL.Query(), &params.SourceSystem, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "source_system"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_system", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "source_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "source_id", r.URL.Query(), &params.SourceId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "source_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_id", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListDeals(w, r, params)
 	}))
@@ -104263,6 +104582,70 @@ func (siw *ServerInterfaceWrapper) ListExtensions(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListExtensions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetExtensionSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetExtensionSettings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetExtensionSettings(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateExtensionSettings operation middleware
+func (siw *ServerInterfaceWrapper) UpdateExtensionSettings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateExtensionSettings(w, r, name)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -119447,6 +119830,58 @@ func (siw *ServerInterfaceWrapper) NameSeats(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// DeclareServiceMember operation middleware
+func (siw *ServerInterfaceWrapper) DeclareServiceMember(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeclareServiceMember(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ArchiveServiceMember operation middleware
+func (siw *ServerInterfaceWrapper) ArchiveServiceMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id Id
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ArchiveServiceMember(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetUserAccess operation middleware
 func (siw *ServerInterfaceWrapper) GetUserAccess(w http.ResponseWriter, r *http.Request) {
 
@@ -123105,6 +123540,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/companies/{id}/merge", wrapper.MergeCompany)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/companies/{id}/offered-values", wrapper.ListCompanyOfferedValues)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/companies/{id}/partner", wrapper.GetPartner)
 	})
 	r.Group(func(r chi.Router) {
@@ -123691,6 +124129,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/extensions", wrapper.ListExtensions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/extensions/{name}/settings", wrapper.GetExtensionSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/extensions/{name}/settings", wrapper.UpdateExtensionSettings)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/field-history", wrapper.GetFieldHistory)
@@ -124798,6 +125242,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users/names", wrapper.NameSeats)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/service-members", wrapper.DeclareServiceMember)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/users/service-members/{id}/archive", wrapper.ArchiveServiceMember)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users/{id}/access", wrapper.GetUserAccess)

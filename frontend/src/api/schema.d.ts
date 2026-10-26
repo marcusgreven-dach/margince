@@ -2175,6 +2175,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{id}/offered-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Opaque resource id (UUID; ordering semantics are not exposed). */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        /**
+         * What each source last offered for the company's fields, to show beside the value on the record.
+         * @description One entry per source and field, for the fields a source offered through its feed. The
+         *     offered value is kept whether the record took it or kept a user's edit, so the two
+         *     can be compared. Needs read on companies and row visibility of the company. An archived
+         *     company answers 404.
+         */
+        get: operations["listCompanyOfferedValues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{id}/logo": {
         parameters: {
             query?: never;
@@ -16037,6 +16063,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/service-members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Declare the member that owns an extension's unattended feed. Installation admin only, human only.
+         * @description Creates a member for a scheduled feed to run as, so the feed does not depend on a
+         *     colleague who may one day leave. The extension lands records as this member, and the
+         *     feed's secret is filed under it.
+         *
+         *     It has no login: there is no password and nobody can sign in as it. It has a full seat
+         *     type but is free of the licence seat limit: it is not counted, and declaring one never
+         *     fails on the seat limit. It holds one role, `service_ingest`,
+         *     which can create and update activities, contacts and companies and nothing else.
+         *
+         *     The member serves the one extension named in `extension`. Any other extension asking
+         *     to act as it is refused, so a member declared for one feed cannot be borrowed by
+         *     another.
+         *
+         *     It is archived, never deleted: see `POST /users/service-members/{id}/archive`.
+         *
+         *     Installation admin only (`role: admin`); an agent may never declare one.
+         */
+        post: operations["declareServiceMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/service-members/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Opaque resource id (UUID; ordering semantics are not exposed). */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retire a service member. Installation admin only, human only.
+         * @description Deactivates and archives the member, which stops the feed that runs as it. The row stays, so the audit trail and the secret filed under it keep
+         *     naming something real; nothing deletes a service member.
+         *
+         *     Offboarding a colleague never does this. A feed stops only when somebody archives its
+         *     member. Publishes `user.deactivated`.
+         *
+         *     Answers 404 for an id that is not a live service member, including one already archived.
+         */
+        post: operations["archiveServiceMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/names": {
         parameters: {
             query?: never;
@@ -16563,6 +16653,34 @@ export interface paths {
          */
         get: operations["listExtensions"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/extensions/{name}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read what the core does with a unit's feed. Needs the extension_access read grant. */
+        get: operations["getExtensionSettings"];
+        /**
+         * Set what the core does with a unit's feed. Admin only.
+         * @description Saves the settings of one composed unit. `declared` changes the settings the unit
+         *     declares as data; a key the unit did not declare, or a value its kind cannot hold, is
+         *     a 422. `overwrites_edited_fields` says
+         *     whether the unit's feed may overwrite a field of a company or deal that a user last
+         *     edited. It is off until an admin turns it on, so the feed leaves such a field as it is
+         *     and names it in `Result.Withheld`. The change is audited like any installation setting.
+         *
+         *     Admin only, human session only. An unknown unit name answers 404.
+         */
+        put: operations["updateExtensionSettings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -27438,6 +27556,8 @@ export interface components {
             emails?: components["schemas"]["ContactEmailInput"][];
             phones?: components["schemas"]["ContactPhoneInput"][];
             source: string;
+            /** @description The id this contact has in source_system. Needs source_system, and the pair is unique: a second contact with the same pair is 409. */
+            source_id?: string | null;
             /** @description Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused). */
             source_system?: string | null;
             /**
@@ -27840,6 +27960,8 @@ export interface components {
             source: string;
             /** @description Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused). */
             source_system?: string | null;
+            /** @description The id this company has in source_system. Needs source_system, and the pair is unique: a second company with the same pair is 409. Look a company up by it with the `source_system` and `source_id` filters on `listCompanies`. */
+            source_id?: string | null;
             /**
              * Format: uuid
              * @description Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat's current name wins on read. captured_by still names the caller.
@@ -27911,6 +28033,16 @@ export interface components {
         CompanyListResponse: {
             data: components["schemas"]["Company"][];
             page: components["schemas"]["PageInfo"];
+        };
+        /** @description The value one source last offered for one company field. */
+        CompanyOfferedValue: {
+            /** @description The source that offered it, as named in the company's outside id. */
+            source_system: string;
+            /** @enum {string} */
+            field: "legal_name" | "industry" | "description";
+            value: string;
+            /** Format: date-time */
+            offered_at: string;
         };
         /**
          * @description The account-tree roll-up over company.parent_company_id. A server read only,
@@ -32630,6 +32762,8 @@ export interface components {
             source: string;
             /** @description Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused). */
             source_system?: string | null;
+            /** @description The id this deal has in source_system. Needs source_system, and the pair is unique: a second deal with the same pair is 409. Look a deal up by it with the `source_system` and `source_id` filters on `listDeals`. */
+            source_id?: string | null;
             /**
              * Format: uuid
              * @description Who wrote this record in the system it came from, when the author holds a seat here. Written only by a declared importer (a signed-in human holding import_run:create), only beside a source_system; either author field or both may be sent, and the seat's current name wins on read. captured_by still names the caller.
@@ -33414,6 +33548,8 @@ export interface components {
             /** Format: date */
             target_end_date?: string | null;
             source: string;
+            /** @description The id this project has in source_system. Needs source_system, and the pair is unique: a second project with the same pair is 409. */
+            source_id?: string | null;
             /** @description Which external system this record came from, when a caller imported it. The reserved mirror: namespace is refused on this wire except for a declared importer: a signed-in human holding import_run:create (an agent carrying those grants is still refused). */
             source_system?: string | null;
             /**
@@ -38942,6 +39078,8 @@ export interface components {
              * @default false
              */
             is_agent: boolean;
+            /** @description The extension unit this seat is the service member of: the identity that unit's scheduled feed runs as. Null for every other seat, including an AI agent seat, so a client tells the two apart by this field and not by `is_agent`. Present only for an admin caller, with `roles`. */
+            service_extension?: string | null;
             /** @description Whether the CALLER may make this member the owner of a record right now: the same check an owner change runs (an active human seat that can write, inside the caller's own write scope), so a picker built on it offers only owners the write will accept. Present on `listUsers`; absent means not computed, and a client then offers the member and lets the write decide. A deactivated member is listed with `false` on the management view, so a list can still be filtered by the work they left behind. */
             assignable?: boolean;
             /** @description This member's assigned system role keys. Present ONLY for an admin caller — the roster is readable by every authenticated member (it feeds the share/assignee pickers), and a rep has no business enumerating who holds `admin`. Normally exactly one key: `inviteUser` assigns one and `changeUserRole` replaces the whole set with one. Clients that render a single current role must still handle the empty and multi-key cases. Deliberately absent on `MeResponse.user`, whose sibling `MeResponse.roles` is the one authority for the caller's own roles — the same fact spelled twice could disagree. */
@@ -38973,6 +39111,12 @@ export interface components {
         };
         SeatNameListResponse: {
             data: components["schemas"]["SeatName"][];
+        };
+        /** @description A member for an extension's unattended feed. No password and no way in. */
+        ServiceMemberRequest: {
+            /** @description The extension unit the member serves, by its manifest name. Only that unit may act as the member. A name no installed unit carries is accepted and simply never used. */
+            extension: string;
+            display_name: string;
         };
         /** @description A colleague who already left, recorded so imported history can name them. No password and no invitation: this creates a seat that cannot be signed into. */
         FormerMemberRequest: {
@@ -40290,6 +40434,31 @@ export interface components {
             routes: components["schemas"]["ComposedExtensionRoute"][];
             /** @description The scheduled jobs this boot actually RUNS for the unit — a job the unit declared with no handler ticks nothing and is deliberately absent, because an operator reading this list is asking what runs, not what was written down. Sorted. */
             jobs: string[];
+        };
+        /** @description The governance settings of one composed extension unit. */
+        ExtensionSettings: {
+            /** @description True when the unit's feed may overwrite a company or deal field that a user last edited. False, the default, makes the feed leave such a field as it is and name it in `Result.Withheld`. */
+            overwrites_edited_fields: boolean;
+            /** @description True when the unit lands companies or deals. Only such a unit has a field a user can have edited, so the screen offers the overwrite switch for it and for no other unit. Ignored on a write. */
+            readonly lands_records?: boolean;
+            /** @description The settings the unit declares as data, with their saved values. Only an admin gets them back, so the list is absent for anyone else. On a write, send the `key` and `value` of each setting to change; a setting left out keeps its value. */
+            declared?: components["schemas"]["DeclaredExtensionSetting"][];
+        };
+        /** @description One setting a unit declares, drawn by the core. */
+        DeclaredExtensionSetting: {
+            /** @description The setting's name inside the unit. */
+            key: string;
+            /** @description The name shown to the admin, as the unit wrote it. */
+            readonly label?: string;
+            /** @description One line saying what the setting does. */
+            readonly hint?: string;
+            /**
+             * @description The control the core draws.
+             * @enum {string}
+             */
+            readonly kind?: "switch" | "text";
+            /** @description The saved value. A switch holds `true` or `false`; a text setting holds one short line. */
+            value: string;
         };
         /** @description One published extension operation. */
         ComposedExtensionRoute: {
@@ -53390,6 +53559,14 @@ export interface operations {
                  *     is archived without `include_archived`, is simply absent from the page.
                  */
                 id?: string[];
+                /**
+                 * @description Companies that came from this outside system, matched exactly. Send `source_id`
+                 *     too to find the one company holding that id there. A company the caller cannot
+                 *     see, or that is archived without `include_archived`, is simply absent from the page.
+                 */
+                source_system?: string;
+                /** @description An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different companies in different systems. */
+                source_id?: string;
             };
             header?: never;
             path?: never;
@@ -53767,6 +53944,32 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    listCompanyOfferedValues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Opaque resource id (UUID; ordering semantics are not exposed). */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The offered values, ordered by source and field; empty when no source offered any. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOfferedValue"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     getCompanyLogo: {
@@ -56014,6 +56217,14 @@ export interface operations {
                  *     Ignored when no `tag_id` is given — a mode with nothing to combine is not a filter.
                  */
                 tag_mode?: "any" | "all" | "none";
+                /**
+                 * @description Deals that came from this outside system, matched exactly. Send `source_id` too to
+                 *     find the one deal holding that id there. A deal that is archived without
+                 *     `include_archived` is simply absent from the page.
+                 */
+                source_system?: string;
+                /** @description An id in an outside system, matched exactly. Send `source_system` with it, because the same id can mean different deals in different systems. */
+                source_id?: string;
             };
             header?: never;
             path?: never;
@@ -74473,6 +74684,74 @@ export interface operations {
             };
         };
     };
+    declareServiceMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description The service member. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Refused: `permission_denied` — the caller is not an installation admin, or is an agent. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Refused: `company_not_described` — this installation has not yet saved its own company through `PUT /company`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    archiveServiceMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Opaque resource id (UUID; ordering semantics are not exposed). */
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The member is archived. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     nameSeats: {
         parameters: {
             query: {
@@ -75129,6 +75408,63 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    getExtensionSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unit name, as listed by `GET /extensions`. */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unit's settings; a unit nobody has configured reads the defaults. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionSettings"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateExtensionSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unit name, as listed by `GET /extensions`. */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtensionSettings"];
+            };
+        };
+        responses: {
+            /** @description The saved settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionSettings"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
         };
     };
     listTeams: {

@@ -1833,6 +1833,7 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "systemJob.risk_verdict": "Prüfung des Deal-Risikos",
   "systemJob.routing_seed": "Einrichtung der Zuweisung",
   "systemJob.schedule_read": "Lesen des Zeitplans",
+  "systemJob.service_members": "Dienstmitglieder angelegt",
   "systemJob.setup_token": "Einrichtungs-Token",
   "systemJob.sign_in_policy_read": "Lesen der Anmelderichtlinie",
   "systemJob.stage_evidence": "Phasenbelege",
@@ -11995,6 +11996,11 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "extAccess.nobodyReads":
     "Jedes Mitglied sieht für diese Erweiterung eine leere Ansicht, da keine Rolle Lesezugriff auf {object} hat. Vergib unten mindestens einer Rolle das Leserecht.",
   "extAccess.matrixName": "Rollenzugriff auf {unit}",
+  "extGovernance.overwrite": "Von Mitgliedern bearbeitete Felder überschreiben",
+  "extGovernance.overwriteHint":
+    "Aus: Diese Erweiterung lässt ein Feld eines Unternehmens oder Deals, das zuletzt ein Mitglied bearbeitet hat, unverändert und meldet es als zurückgehalten. An: Die Erweiterung ersetzt das Feld.",
+  "extGovernance.readOnly": "Diese Einstellung ändert ein Admin.",
+  "extGovernance.notSaved": "Einstellung wurde nicht gespeichert.",
   "users.empty": "Noch keine Mitglieder.",
   "users.inviteTitle": "Mitglied einladen",
   "users.teamsLabel": "Teams",
@@ -12083,6 +12089,11 @@ export const de: Readonly<Record<MessageKey, string>> = {
     "Das ist die Agentenidentität des Unternehmens. Diese Identität meldet sich nirgends an, daher verliert niemand den Zugriff. Geplante Jobs von Erweiterungen laufen weiter. Jeder Job handelt unter seiner eigenen Identität und erfasst unter der Berechtigung des Mitglieds, dessen Verbindung den Datensatz erzeugt hat.",
   "users.agentSeat": "Agent",
   "users.agentSeatRole": "Handelt über einen Passport, nicht über eine Rolle",
+  "users.serviceMember": "Dienstmitglied",
+  "users.serviceMemberFor": "Feed von {extension}",
+  "users.serviceMemberRole": "Feste Rolle: Feed-Annahme",
+  "users.deactivateServiceMemberBody":
+    "Das ist die Identität, unter der der geplante Feed einer Erweiterung läuft. Diese Identität meldet sich nirgends an, daher verliert niemand den Zugriff. Deaktivierst du sie, hält der Feed an, bis du sie wieder aktivierst.",
   "users.roleLabel": "Rolle",
   "users.inviteOpen": "Mitglied einladen",
   "users.invite": "Einladen",
@@ -13915,6 +13926,11 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "webhooks.event.deal.restored.label": "Deal wiederhergestellt",
   "webhooks.event.deal.restored.when":
     "Ein archivierter Deal wird wiederhergestellt.",
+  "webhooks.event.deal.merged.label": "Deals zusammengeführt",
+  "webhooks.event.deal.merged.when":
+    "Zwei Deals werden zu einem zusammengeführt.",
+  "webhooks.event.deal.erased.label": "Deal gelöscht",
+  "webhooks.event.deal.erased.when": "Ein Deal wird endgültig gelöscht.",
   "webhooks.eventGroup.offers": "Angebote",
   "webhooks.event.offer.created.label": "Angebotsrevision erstellt",
   "webhooks.event.offer.created.when":
@@ -13992,6 +14008,9 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "webhooks.event.company.restored.label": "Unternehmen wiederhergestellt",
   "webhooks.event.company.restored.when":
     "Ein archiviertes Unternehmen wird wiederhergestellt.",
+  "webhooks.event.company.erased.label": "Unternehmen gelöscht",
+  "webhooks.event.company.erased.when":
+    "Ein Unternehmen wird endgültig gelöscht.",
   "webhooks.eventGroup.leads": "Leads",
   "webhooks.event.lead.created.label": "Lead erstellt",
   "webhooks.event.lead.created.when":

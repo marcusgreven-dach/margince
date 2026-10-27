@@ -100,8 +100,8 @@ accept [CLA.md](CLA.md) to send code.
 - Each release becomes Apache 2.0 no later than two years after it ships.
 
 Outside `dev` and `test` mode, the server needs a license token from Gradion to start, even for one
-seat. For up to 3 seats, ask for a free token with the
-[free license form](https://dist.margince.com/free-license). It lasts one year. If this blocks you, please say so
-in an issue.
+seat. Test license: request it via the
+[form](https://dist.margince.com/free-license). For anything beyond that, please contact Gradion Enterprise
+Sales. If this blocks you, please say so in an issue.
 
 Prices are on [margince.com](https://margince.com). Margince is built by [Gradion](https://gradion.com).

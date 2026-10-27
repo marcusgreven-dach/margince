@@ -89,8 +89,8 @@ one seat. A dev stack needs none.
 
 To get a token:
 
-- For up to 3 seats for your own company, ask for a free token with the
-  [free license form](https://dist.margince.com/free-license). It lasts one year.
+- Test license: request it via the [form](https://dist.margince.com/free-license). For anything beyond
+  that, please contact Gradion Enterprise Sales.
 - For more seats, see the prices on [margince.com](https://margince.com).
 - To host Margince for other companies, you need a hosting partner contract with Gradion.
 

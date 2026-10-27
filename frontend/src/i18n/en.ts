@@ -1681,6 +1681,9 @@ export const en = {
   // a name, so the tag says the kind and stops rather than printing an
   // identifier at a reader who can do nothing with it.
   "trust.agentUnnamed": "Automated by an agent",
+  // The colleague the agent worked for, from the record's create audit row.
+  "trust.agentFor": "Made by {agent} for {name}",
+  "trust.agentUnnamedFor": "Made by an agent for {name}",
   // A job the installation ran itself — a scheduled sweep, a backfill, a public
   // endpoint. Named apart from an agent because "a model decided this" and "the
   // system did its housekeeping" are different answers to "who do I ask".
@@ -3065,6 +3068,10 @@ export const en = {
   "co.health.reason.neverWritten": "No message from them and no meeting yet.",
   "co.health.reason.quiet_one": "No reply and no meeting for {days} day.",
   "co.health.reason.quiet_other": "No reply and no meeting for {days} days.",
+  "co.health.reason.quietSince_one":
+    "No reply and no meeting since {at} ({days} day).",
+  "co.health.reason.quietSince_other":
+    "No reply and no meeting since {at} ({days} days).",
   "co.health.reason.meetingBooked": "A meeting is booked for {at}.",
   "co.health.reason.lastMetToday": "Last met them today.",
   "co.health.reason.lastMet_one": "Last met them {days} day ago.",

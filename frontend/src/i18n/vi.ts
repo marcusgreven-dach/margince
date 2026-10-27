@@ -1686,6 +1686,8 @@ export const vi: Readonly<Record<MessageKey, string>> = {
   "trust.importedFrom": "Đã nhập từ {uploadName}",
   "trust.agentTag": "Tự động: {agent}",
   "trust.agentUnnamed": "Do AI tạo",
+  "trust.agentFor": "{agent} tạo cho {name}",
+  "trust.agentUnnamedFor": "Do AI tạo cho {name}",
   "trust.systemTag": "Tác vụ hệ thống: {job}",
   "trust.systemUnnamed": "Tác vụ hệ thống",
   "systemJob.agent_resume": "Tiếp tục lần chạy của trợ lý AI",
@@ -2977,6 +2979,10 @@ export const vi: Readonly<Record<MessageKey, string>> = {
     "Chưa có phản hồi và chưa có cuộc họp nào trong {days} ngày qua.",
   "co.health.reason.quiet_other":
     "Chưa có phản hồi và chưa có cuộc họp nào trong {days} ngày qua.",
+  "co.health.reason.quietSince_one":
+    "Chưa có phản hồi hay cuộc họp nào từ {at} ({days} ngày).",
+  "co.health.reason.quietSince_other":
+    "Chưa có phản hồi hay cuộc họp nào từ {at} ({days} ngày).",
   "co.health.reason.meetingBooked": "Đã đặt một cuộc họp vào {at}.",
   "co.health.reason.lastMetToday": "Đã họp hôm nay.",
   "co.health.reason.lastMet_one": "Lần họp gần nhất cách đây {days} ngày.",

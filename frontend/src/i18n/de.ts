@@ -1731,6 +1731,8 @@ export const de: Readonly<Record<MessageKey, string>> = {
   "trust.importedFrom": "Importiert aus {uploadName}",
   "trust.agentTag": "Automatisiert durch {agent}",
   "trust.agentUnnamed": "Automatisiert durch einen Agenten",
+  "trust.agentFor": "Von {agent} für {name} erstellt",
+  "trust.agentUnnamedFor": "Von einem Agenten für {name} erstellt",
   "trust.systemTag": "Systemaufgabe: {job}",
   "trust.systemUnnamed": "Systemaufgabe",
   "systemJob.agent_resume": "Fortsetzung von Agentenläufen",
@@ -3066,6 +3068,10 @@ export const de: Readonly<Record<MessageKey, string>> = {
     "Seit {days} Tag keine Antwort und kein Termin.",
   "co.health.reason.quiet_other":
     "Seit {days} Tagen keine Antwort und kein Termin.",
+  "co.health.reason.quietSince_one":
+    "Seit {at} ({days} Tag) keine Antwort und kein Termin.",
+  "co.health.reason.quietSince_other":
+    "Seit {at} ({days} Tagen) keine Antwort und kein Termin.",
   "co.health.reason.meetingBooked": "Ein Termin ist für den {at} angesetzt.",
   "co.health.reason.lastMetToday": "Heute getroffen.",
   "co.health.reason.lastMet_one": "Zuletzt vor {days} Tag getroffen.",

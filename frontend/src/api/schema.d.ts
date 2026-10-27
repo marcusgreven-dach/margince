@@ -28806,7 +28806,8 @@ export interface components {
          *     dimension the client rates itself.
          *
          *     - `never_written`: no message from them and no meeting with them, ever.
-         *     - `quiet`: no message from them and no meeting with them for `days` days.
+         *     - `quiet`: no message from them and no meeting with them for `days` days, counted from
+         *       `at`, the last of the two.
          *     - `meeting_booked`: quiet, but a meeting is booked to start at `at`.
          *     - `last_met`: in touch through a meeting `days` days ago.
          *     - `single_threaded`: in touch, but one contact carries the whole account.
@@ -29753,6 +29754,13 @@ export interface components {
              */
             as_of: string;
             contact: components["schemas"]["Contact"];
+            /**
+             * @description Who created the contact, from its earliest create audit row: for an agent, the
+             *     colleague it worked for and the tool it was typed through, each when the row
+             *     records it, which `captured_by` cannot say. Absent when no create row is known; a reader says "unknown" for an
+             *     absent value and never "System".
+             */
+            created_by?: components["schemas"]["PrincipalAttribution"];
             /** @description The project this was narrowed to, when the request named one. */
             scope?: components["schemas"]["ProjectScope"];
             /**

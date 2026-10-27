@@ -27,6 +27,7 @@ import type {
   DetailRow,
   DetailSection,
 } from "../../design-system/recorddetails";
+import { countryBeyondCity } from "../../format/address";
 import {
   EMAIL_TYPE_LABEL,
   PHONE_TYPE_LABEL,
@@ -67,7 +68,10 @@ export function useContactAboutSections(view: Contact360): DetailSection[] {
   const email = contact.primary_email;
   const emailRow = contact.emails?.find((row) => row.email === email);
   const phone = primaryPhone(contact.phones);
-  const address = [contact.address?.city, contact.address?.country]
+  const address = [
+    contact.address?.city,
+    countryBeyondCity(contact.address?.city, contact.address?.country),
+  ]
     .filter(Boolean)
     .join(", ");
   const employer = currentEmployer(view.employments?.data);
